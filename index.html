@@ -2343,8 +2343,9 @@ function saveAll() { const c = cur(); if (c) c.content = editor.value; let n = 0
 function saveMenu() {
   const f = cur(); if (!f) return toast('لا يوجد ملف', 'err');
   const n = modifiedCount();
-  ui.show('<h3>حفظ التغييرات في ' + esc(f.name) + '؟</h3><div class="srow"><button class="btn primary" data-act="same">حفظ</button><button class="btn" data-act="as">حفظ باسم…</button></div>' +
-    (n > 1 ? '<button class="btn" data-act="all">حفظ الكل (' + n + ' ملفات معدّلة)</button>' : '') + '<button class="btn" data-ui="cancel">إلغاء</button>', act => {
+  const I = x => '<svg class="ic" aria-hidden="true"><use href="#i-' + x + '"/></svg> ';
+  ui.show('<h3>' + I('save') + esc(f.name.split('/').pop()) + '</h3><div class="srow"><button class="btn primary" data-act="same">' + I('save') + 'حفظ</button><button class="btn" data-act="as">' + I('edit') + 'حفظ باسم</button>' +
+    (n > 1 ? '<button class="btn" data-act="all">' + I('check-all') + 'الكل (' + n + ')</button>' : '') + '<button class="btn" data-ui="cancel">' + I('x') + '</button></div>', act => {
     if (act === 'same') { ui.close(null); return saveFile(); }
     if (act === 'all') { ui.close(null); return saveAll(); }
     if (act === 'as') return saveAsDialog();
@@ -2362,7 +2363,7 @@ function saveAsDialog() {
       (path ? '<div class="issue" data-act="up"><b>.. (للأعلى)</b></div>' : '') +
       kids.map((k, i) => `<div class="issue" data-act="open" data-i="${i}"><b>📁 ${esc(k.slice(k.lastIndexOf('/') + 1))}</b></div>`).join('') +
       (kids.length || path ? '' : '<div class="slabel">لا مجلدات — سيُحفظ في جذر المشروع</div>') +
-      '<button class="btn" data-act="nf">+ مجلد جديد هنا</button><div class="srow"><button class="btn primary" data-act="go">حفظ هنا (داخل المشروع)</button></div><button class="btn" data-act="dev">' + (FS_OK ? 'حفظ على الجهاز… (اختيار المكان)' : (typeof navigator.canShare === 'function' ? 'حفظ على الجهاز… (قائمة المشاركة)' : 'تنزيل نسخة على الجهاز')) + '</button><div class="srow"><button class="btn" data-ui="cancel">إلغاء</button></div>', async (act, el) => {
+      '<button class="btn" data-act="nf">+ مجلد</button><div class="srow"><button class="btn primary" data-act="go">حفظ هنا</button><button class="btn" data-act="dev">' + (FS_OK ? 'حفظ في…' : (typeof navigator.canShare === 'function' ? 'مشاركة' : 'تنزيل')) + '</button><button class="btn" data-ui="cancel">✕</button></div>', async (act, el) => {
         const inp = $('saName'); if (inp) nameVal = inp.value;
         if (act === 'dev') { ui.close(null); return saveToDevice(true); }
         if (act === 'up') { path = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''; return draw(); }
@@ -2382,14 +2383,25 @@ function saveAsDialog() {
 function exportDialog() {
   const c = cur(); if (c) c.content = editor.value;
   if (!files.length) return toast('لا ملفات للتصدير', 'err');
+  const I = n => '<svg class="ic" aria-hidden="true"><use href="#i-' + n + '"/></svg> ';
   let sel = '', nameVal = '', list = [];
   const defName = () => { const b = cleanName(sel ? sel.split('/').pop() : commonRoot()) || 'project'; return b + '-v' + (((S.exportVer && S.exportVer[b]) || 0) + 1); };
+  const count = () => {
+    const nf = files.filter(f => !sel || f.name.startsWith(sel + '/')).length;
+    let nb = 0; BIN.forEach((u, n) => { if (!sel || n.startsWith(sel + '/')) nb++; });
+    return nf + ' ملف' + (nb ? ' + ' + nb + ' ثنائي' : '');
+  };
   nameVal = defName();
+  const canShare = typeof navigator.canShare === 'function';
   const draw = () => {
     list = [''].concat(allFolders());
-    ui.show('<h3>تصدير ZIP</h3><div class="slabel">اسم الملف</div><input type="text" id="exName" dir="ltr" value="' + esc(nameVal) + '"><div class="slabel">ما الذي يُصدَّر؟</div>' +
+    ui.show('<h3>' + I('export') + 'ZIP</h3><input type="text" id="exName" dir="ltr" value="' + esc(nameVal) + '">' +
       folderRows(list, sel).replace('/ (جذر المشروع)', 'المشروع كله') +
-      '<div class="slabel">' + (window.showSaveFilePicker ? 'ستختار مكان الحفظ بعد الضغط على تصدير.' : typeof navigator.canShare === 'function' ? 'اختيار المكان يتم من قائمة المشاركة (الملفات، Drive…).' : noPickMsg()) + '</div>' + (window.showSaveFilePicker ? '<button class="btn primary" data-act="go">تصدير وحفظ في… (اختيار المكان)</button>' : '<button class="btn primary" data-act="' + (typeof navigator.canShare === 'function' ? 'share' : 'go') + '">تصدير وحفظ في… (اختيار المكان)</button>') + (typeof navigator.canShare === 'function' && window.showSaveFilePicker ? '<button class="btn" data-act="share">مشاركة (Drive…)</button>' : '') + '<button class="btn" data-act="dl">تنزيل فقط (مجلد التنزيلات)</button>' + '<button class="btn" data-ui="cancel">إلغاء</button>', (act, el) => {
+      '<div class="slabel" dir="ltr" style="text-align:center">📦 ' + count() + '</div>' +
+      '<div class="srow"><button class="btn primary" data-act="' + (window.showSaveFilePicker || !canShare ? 'go' : 'share') + '">' + I('save') + 'حفظ في…</button>' +
+      (canShare ? '<button class="btn" data-act="share">' + I('external') + 'مشاركة</button>' : '') +
+      '<button class="btn" data-act="dl">' + I('arrow-down') + 'تنزيل</button>' +
+      '<button class="btn" data-ui="cancel">' + I('x') + '</button></div>', (act, el) => {
         const inp = $('exName'); if (inp) nameVal = inp.value;
         if (act === 'fold') { const old = defName(); sel = list[+el.dataset.i]; if (nameVal === old) nameVal = defName(); return draw(); }
         if (act === 'go' || act === 'share' || act === 'dl') { const n = nameVal; ui.close(null); return exportZip(sel || null, null, n, act === 'share' ? 'share' : act === 'dl' ? 'download' : null); }
