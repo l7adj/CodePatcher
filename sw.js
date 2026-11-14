@@ -1,9 +1,0 @@
-/* CodePatcher service worker: network first, cached fallback */
-const C = 'codepatcher-v4';
-self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(C).then(c => c.addAll(['./', './index.html', './manifest.webmanifest', './icon.svg', './CSS/base.css', './CSS/editor.css', './CSS/ui.css', './CSS/theme-light.css', './Js/01-state.js', './Js/02-pwa.js', './Js/03-utils.js', './Js/04-tokenizers.js', './Js/05-patch-engine.js', './Js/06-ui-core.js', './Js/07-errors-report.js', './Js/08-editor-view.js', './Js/09-history.js', './Js/10-editor-ops.js', './Js/11-find-replace.js', './Js/12-patch-ui.js', './Js/13-symbols-keyboard.js', './Js/14-files-tabs.js', './Js/15-project-io.js', './Js/16-export.js','./Js/16b-text-bundle.js', './Js/17-drawer.js', './Js/18-settings.js', './Js/19-isolation-selftest.js', './Js/20-file-clipboard.js', './Js/21-smoke-tests.js', './Js/22-palette-shortcuts.js', './Js/23-versions.js', './Js/24-preview-console.js', './Js/25-storage.js', './Js/26-link-updates.js', './Js/27-multiselect.js', './Js/28-report-ambiguity.js', './Js/29-patch-history.js'])).catch(() => {})); });
-self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== C).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
-self.addEventListener('fetch', e => {
-  const r = e.request;
-  if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return;
-  e.respondWith(fetch(r).then(res => { if (res.ok) { const cp = res.clone(); caches.open(C).then(c => c.put(r, cp)); } return res; }).catch(() => caches.match(r).then(m => m || caches.match('./'))));
-});
