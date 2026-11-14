@@ -2344,8 +2344,11 @@ function saveMenu() {
   const f = cur(); if (!f) return toast('لا يوجد ملف', 'err');
   const n = modifiedCount();
   const I = x => '<svg class="ic" aria-hidden="true"><use href="#i-' + x + '"/></svg> ';
-  ui.show('<h3>' + I('save') + esc(f.name.split('/').pop()) + '</h3><div class="srow"><button class="btn primary" data-act="same">' + I('save') + 'حفظ</button><button class="btn" data-act="as">' + I('edit') + 'حفظ باسم</button>' +
-    (n > 1 ? '<button class="btn" data-act="all">' + I('check-all') + 'الكل (' + n + ')</button>' : '') + '<button class="btn" data-ui="cancel">' + I('x') + '</button></div>', act => {
+  const row = (act, ic, t) => '<div class="issue" data-act="' + act + '" style="padding:10px 12px"><b>' + I(ic) + t + '</b></div>';
+  ui.show('<h3>' + I('save') + esc(f.name.split('/').pop()) + '</h3>' +
+    row('same', 'save', 'حفظ') +
+    row('as', 'edit', 'حفظ باسم / في مكان آخر…') +
+    (n > 1 ? row('all', 'check-all', 'حفظ الكل (' + n + ')') : ''), act => {
     if (act === 'same') { ui.close(null); return saveFile(); }
     if (act === 'all') { ui.close(null); return saveAll(); }
     if (act === 'as') return saveAsDialog();
@@ -2384,24 +2387,25 @@ function exportDialog() {
   const c = cur(); if (c) c.content = editor.value;
   if (!files.length) return toast('لا ملفات للتصدير', 'err');
   const I = n => '<svg class="ic" aria-hidden="true"><use href="#i-' + n + '"/></svg> ';
+  const row = (act, ic, t) => '<div class="issue" data-act="' + act + '" style="padding:10px 12px"><b>' + I(ic) + t + '</b></div>';
   let sel = '', nameVal = '', list = [];
   const defName = () => { const b = cleanName(sel ? sel.split('/').pop() : commonRoot()) || 'project'; return b + '-v' + (((S.exportVer && S.exportVer[b]) || 0) + 1); };
   const count = () => {
     const nf = files.filter(f => !sel || f.name.startsWith(sel + '/')).length;
     let nb = 0; BIN.forEach((u, n) => { if (!sel || n.startsWith(sel + '/')) nb++; });
-    return nf + ' ملف' + (nb ? ' + ' + nb + ' ثنائي' : '');
+    return nf + ' ملف' + (nb ? ' + ' + nb : '');
   };
   nameVal = defName();
-  const canShare = typeof navigator.canShare === 'function';
+  const canShare = typeof navigator.canShare === 'function', canPick = !!window.showSaveFilePicker;
   const draw = () => {
     list = [''].concat(allFolders());
-    ui.show('<h3>' + I('export') + 'ZIP</h3><input type="text" id="exName" dir="ltr" value="' + esc(nameVal) + '">' +
-      folderRows(list, sel).replace('/ (جذر المشروع)', 'المشروع كله') +
-      '<div class="slabel" dir="ltr" style="text-align:center">📦 ' + count() + '</div>' +
-      '<div class="srow"><button class="btn primary" data-act="' + (window.showSaveFilePicker || !canShare ? 'go' : 'share') + '">' + I('save') + 'حفظ في…</button>' +
-      (canShare ? '<button class="btn" data-act="share">' + I('external') + 'مشاركة</button>' : '') +
-      '<button class="btn" data-act="dl">' + I('arrow-down') + 'تنزيل</button>' +
-      '<button class="btn" data-ui="cancel">' + I('x') + '</button></div>', (act, el) => {
+    ui.show('<h3>' + I('export') + 'ZIP <small dir="ltr" style="opacity:.6">· ' + count() + '</small></h3>' +
+      '<input type="text" id="exName" dir="ltr" value="' + esc(nameVal) + '">' +
+      (list.length > 1 ? folderRows(list, sel).replace('/ (جذر المشروع)', 'المشروع كله') : '') +
+      (canPick ? row('go', 'save', 'حفظ في…') : '') +
+      (canShare ? row('share', 'external', 'مشاركة') : '') +
+      row('dl', 'arrow-down', 'تنزيل') +
+      (!canPick && !canShare ? '' : ''), (act, el) => {
         const inp = $('exName'); if (inp) nameVal = inp.value;
         if (act === 'fold') { const old = defName(); sel = list[+el.dataset.i]; if (nameVal === old) nameVal = defName(); return draw(); }
         if (act === 'go' || act === 'share' || act === 'dl') { const n = nameVal; ui.close(null); return exportZip(sel || null, null, n, act === 'share' ? 'share' : act === 'dl' ? 'download' : null); }
