@@ -121,4 +121,15 @@ document.addEventListener('keydown', e => {
   else if (inEd && mod && e.shiftKey && k === 'k') { e.preventDefault(); lineOp('dell'); }
   else if (inEd && e.altKey && !mod && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); lineOp(e.key === 'ArrowUp' ? 'mvup' : 'mvdn'); }
 }, true);
-
+/* قائمة «إدارة المشروع»: تجمع التصدير وحفظ الإصدارات وتسجيل إصدار مستقر في زر واحد بالشريط العلوي */
+function openManage() {
+  const row = (act, ic, t, d) => '<div class="mi" data-act="' + act + '"><svg class="ic" aria-hidden="true"><use href="#i-' + ic + '"/></svg><span>' + t + '<br><small style="color:var(--muted)">' + d + '</small></span></div>';
+  ui.show('<h3>إدارة المشروع</h3>' +
+    row('exp', 'export', 'تصدير المشروع', 'ZIP أو نص واحد للذكاء الاصطناعي') +
+    row('sav', 'save', 'حفظ الإصدارات', 'ZIP مع سجل الإصدارات') +
+    row('rel', 'flag', 'تسجيل إصدار مستقر', 'نقطة رجوع باسم تختاره'), act => {
+      const fn = { exp: exportDialog, sav: saveVersions, rel: quickRelease }[act];
+      ui.close(null);
+      if (fn) setTimeout(fn, 120);
+    });
+}
