@@ -2347,11 +2347,13 @@ function saveMenu() {
   const row = (act, ic, t) => '<div class="issue" data-act="' + act + '" style="padding:10px 12px"><b>' + I(ic) + t + '</b></div>';
   ui.show('<h3>' + I('save') + esc(f.name.split('/').pop()) + '</h3>' +
     row('same', 'save', 'حفظ') +
-    row('as', 'edit', 'حفظ باسم / في مكان آخر…') +
+    row('as', 'edit', 'حفظ باسم') +
+    row('dev', 'external', 'حفظ في… (على الجهاز)') +
     (n > 1 ? row('all', 'check-all', 'حفظ الكل (' + n + ')') : ''), act => {
     if (act === 'same') { ui.close(null); return saveFile(); }
     if (act === 'all') { ui.close(null); return saveAll(); }
     if (act === 'as') return saveAsDialog();
+    if (act === 'dev') { ui.close(null); return saveToDevice(true); }
   });
 }
 function childFolders(path, extra) { const all = new Set(allFolders().concat(extra)), out = []; all.forEach(p => { const i = p.lastIndexOf('/'); if ((i < 0 ? '' : p.slice(0, i)) === path) out.push(p); }); return out.sort(); }
