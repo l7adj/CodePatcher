@@ -103,4 +103,5 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) saveS
 
 window.addEventListener('error', ev => { if (!booted) showRecovery(ev.error || ev.message); else warnOnce('خطأ غير متوقع — بياناتك محفوظة، والنسخ في الإعدادات ‹ نقاط الحفظ'); });
 window.addEventListener('unhandledrejection', ev => { if (!booted) showRecovery(ev.reason); });
-boot().then(() => { if (!bootFailed) booted = true; }).catch(e => showRecovery(e));
+const startBoot = () => boot().then(() => { if (!bootFailed) booted = true; }).catch(e => showRecovery(e));
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startBoot); else startBoot();
