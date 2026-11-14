@@ -2275,18 +2275,24 @@ async function exportZip(pre, only, fixed, mode, binDirs) {
   const zblob = makeZip(entries);
   const zfile = (typeof File === 'function') ? new File([zblob], name + '.zip', { type: 'application/zip' }) : null;
   const touch = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
-  if (zfile && mode !== 'download' && (mode === 'share' || (mode == null && touch && !window.showSaveFilePicker))) {
-    const r = await tryShare(zfile, name);
-    if (r === 'ok') return toast('اخترت المكان من قائمة المشاركة: ' + name + '.zip', 'ok');
-    if (r === 'abort') return;
-    toast(r === 'fail' ? 'تعذّر فتح قائمة المشاركة — سيُنزَّل الملف إلى مجلد التنزيلات' : noPickMsg(), 'err');
-  }
-  if (window.showSaveFilePicker && mode !== 'share' && mode !== 'download') {
+  const canPick = !!window.showSaveFilePicker && window.self === window.top;
+  const pickSave = async () => {
     try {
       const h = await showSaveFilePicker({ suggestedName: name + '.zip', types: [{ description: 'ZIP', accept: { 'application/zip': ['.zip'] } }] });
       const w = await h.createWritable(); await w.write(zblob); await w.close();
-      return toast('تم حفظ ' + entries.length + ' ملف: ' + name + '.zip', 'ok');
-    } catch (e) { if (e && e.name === 'AbortError') return; }
+      toast('تم حفظ ' + entries.length + ' ملف: ' + name + '.zip', 'ok');
+      return 'ok';
+    } catch (e) { return e && e.name === 'AbortError' ? 'abort' : 'fail'; }
+  };
+  if (mode == null || mode === 'pick') {
+    if (canPick) { const r = await pickSave(); if (r !== 'fail') return; }
+  }
+  if (zfile && (mode === 'share' || (mode == null && touch))) {
+    const r = await tryShare(zfile, name);
+    if (r === 'ok') return toast('اخترت المكان من قائمة المشاركة: ' + name + '.zip', 'ok');
+    if (r === 'abort') return;
+    if (canPick) { const r2 = await pickSave(); if (r2 !== 'fail') return; }
+    toast(r === 'fail' ? 'تعذّر فتح قائمة المشاركة — سيُنزَّل الملف إلى مجلد التنزيلات' : noPickMsg(), 'err');
   }
   const url = URL.createObjectURL(zblob);
   const a = document.createElement('a'); a.href = url; a.download = name + '.zip'; a.style.display = 'none';
@@ -2383,7 +2389,7 @@ function exportDialog() {
     list = [''].concat(allFolders());
     ui.show('<h3>تصدير ZIP</h3><div class="slabel">اسم الملف</div><input type="text" id="exName" dir="ltr" value="' + esc(nameVal) + '"><div class="slabel">ما الذي يُصدَّر؟</div>' +
       folderRows(list, sel).replace('/ (جذر المشروع)', 'المشروع كله') +
-      '<div class="slabel">' + (typeof navigator.canShare === 'function' ? 'اختيار المكان يتم من قائمة المشاركة (الملفات، Drive…).' : window.showSaveFilePicker ? 'ستختار مكان الحفظ بعد الضغط على تصدير.' : noPickMsg()) + '</div>' + (typeof navigator.canShare === 'function' ? '<button class="btn primary" data-act="share">تصدير وحفظ في… (اختيار المكان)</button><button class="btn" data-act="dl">تنزيل فقط (مجلد التنزيلات)</button>' : '<button class="btn primary" data-act="go">تصدير</button>') + '<button class="btn" data-ui="cancel">إلغاء</button>', (act, el) => {
+      '<div class="slabel">' + (window.showSaveFilePicker ? 'ستختار مكان الحفظ بعد الضغط على تصدير.' : typeof navigator.canShare === 'function' ? 'اختيار المكان يتم من قائمة المشاركة (الملفات، Drive…).' : noPickMsg()) + '</div>' + (window.showSaveFilePicker ? '<button class="btn primary" data-act="go">تصدير وحفظ في… (اختيار المكان)</button>' : '<button class="btn primary" data-act="' + (typeof navigator.canShare === 'function' ? 'share' : 'go') + '">تصدير وحفظ في… (اختيار المكان)</button>') + (typeof navigator.canShare === 'function' && window.showSaveFilePicker ? '<button class="btn" data-act="share">مشاركة (Drive…)</button>' : '') + '<button class="btn" data-act="dl">تنزيل فقط (مجلد التنزيلات)</button>' + '<button class="btn" data-ui="cancel">إلغاء</button>', (act, el) => {
         const inp = $('exName'); if (inp) nameVal = inp.value;
         if (act === 'fold') { const old = defName(); sel = list[+el.dataset.i]; if (nameVal === old) nameVal = defName(); return draw(); }
         if (act === 'go' || act === 'share' || act === 'dl') { const n = nameVal; ui.close(null); return exportZip(sel || null, null, n, act === 'share' ? 'share' : act === 'dl' ? 'download' : null); }
