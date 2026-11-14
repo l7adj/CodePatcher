@@ -2404,8 +2404,7 @@ function exportDialog() {
       (list.length > 1 ? folderRows(list, sel).replace('/ (جذر المشروع)', 'المشروع كله') : '') +
       (canPick ? row('go', 'save', 'حفظ في…') : '') +
       (canShare ? row('share', 'external', 'مشاركة') : '') +
-      row('dl', 'arrow-down', 'تنزيل') +
-      (!canPick && !canShare ? '' : ''), (act, el) => {
+      row('dl', 'arrow-down', 'تنزيل'), (act, el) => {
         const inp = $('exName'); if (inp) nameVal = inp.value;
         if (act === 'fold') { const old = defName(); sel = list[+el.dataset.i]; if (nameVal === old) nameVal = defName(); return draw(); }
         if (act === 'go' || act === 'share' || act === 'dl') { const n = nameVal; ui.close(null); return exportZip(sel || null, null, n, act === 'share' ? 'share' : act === 'dl' ? 'download' : null); }
