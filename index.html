@@ -334,6 +334,7 @@ body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inse
 .mi{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 6px;border-radius:var(--r2);font-size:14px;cursor:pointer}
 .mi:active{background:var(--hover)}
 .mi svg{color:var(--cyan)}
+body.runfs>header,body.runfs>.tabbar,body.runfs>.nav{display:none}
 </style>
 </head>
 <body>
@@ -3416,11 +3417,11 @@ function renderConsole() {
 function clearConsole() { conMsgs = []; $('consoleFab').classList.remove('has-err'); renderConsole(); }
 function toggleConsole() { conOpen = !conOpen; $('conPane').classList.toggle('open', conOpen); $('consoleFab').classList.toggle('hide', conOpen); renderConsole(); }
 function copyConsole() { copyToClipboard(conMsgs.map(m => `[${m.t}] ${m.txt}`).join('\n') || '(فارغ)').then(() => toast('تم نسخ الكونسول', 'ok')); }
-function toggleFullscreen() { const p = $('p-run'); p.classList.toggle('fullscreen'); $('fsBtn').innerHTML = ic(p.classList.contains('fullscreen') ? 'shrink' : 'expand'); }
+function toggleFullscreen() { const on = document.body.classList.toggle('runfs'); $('fsBtn').innerHTML = ic(on ? 'shrink' : 'expand'); setTimeout(syncViewport, 60); }
 function openInBrowser() {
   try {
     const inner = withHook(projectSource()).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    const page = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;background:#fff}iframe{border:0;width:100%;height:100%}#p-run.fullscreen{position:fixed}
+    const page = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;background:#fff}iframe{border:0;width:100%;height:100%}
 </style><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="' + inner + '"></iframe>';
     const url = URL.createObjectURL(new Blob([page], { type: 'text/html;charset=utf-8' }));
     window.open(url, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(url), 60000);
@@ -3431,7 +3432,7 @@ function switchTab(id) {
   document.querySelectorAll('.nt').forEach(t => t.classList.remove('active'));
   $(id).classList.add('active');
   const nt = document.querySelector(`.nt[data-t="${id}"]`); if (nt) nt.classList.add('active');
-  $('p-run').classList.remove('fullscreen'); $('fsBtn').innerHTML = ic('expand');
+  document.body.classList.remove('runfs'); $('fsBtn').innerHTML = ic('expand');
   if (id !== 'p-edit' && id !== 'p-patch' && document.activeElement && document.activeElement.blur) document.activeElement.blur();
   currentTab = id; scheduleSave(); setTimeout(syncViewport, 60);
   if (id === 'p-edit') requestAnimationFrame(() => { paintWindow(); });
