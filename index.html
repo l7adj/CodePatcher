@@ -3420,7 +3420,8 @@ function toggleFullscreen() { const p = $('p-run'); p.classList.toggle('fullscre
 function openInBrowser() {
   try {
     const inner = withHook(projectSource()).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    const page = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;background:#fff}iframe{border:0;width:100%;height:100%}</style><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="' + inner + '"></iframe>';
+    const page = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;height:100%;background:#fff}iframe{border:0;width:100%;height:100%}#p-run.fullscreen{position:fixed}
+</style><iframe sandbox="allow-scripts allow-modals allow-forms allow-popups" srcdoc="' + inner + '"></iframe>';
     const url = URL.createObjectURL(new Blob([page], { type: 'text/html;charset=utf-8' }));
     window.open(url, '_blank', 'noopener'); setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (e) { toast('تعذر الفتح', 'err'); }
