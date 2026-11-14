@@ -2347,8 +2347,7 @@ function saveMenu() {
   const row = (act, ic, t) => '<div class="issue" data-act="' + act + '" style="padding:10px 12px"><b>' + I(ic) + t + '</b></div>';
   ui.show('<h3>' + I('save') + esc(f.name.split('/').pop()) + '</h3>' +
     row('same', 'save', 'حفظ') +
-    row('as', 'edit', 'حفظ باسم') +
-    row('dev', 'external', 'حفظ في… (على الجهاز)') +
+    row('as', 'save', 'حفظ في…') +
     (n > 1 ? row('all', 'check-all', 'حفظ الكل (' + n + ')') : ''), act => {
     if (act === 'same') { ui.close(null); return saveFile(); }
     if (act === 'all') { ui.close(null); return saveAll(); }
@@ -2368,7 +2367,7 @@ function saveAsDialog() {
       (path ? '<div class="issue" data-act="up"><b>.. (للأعلى)</b></div>' : '') +
       kids.map((k, i) => `<div class="issue" data-act="open" data-i="${i}"><b>📁 ${esc(k.slice(k.lastIndexOf('/') + 1))}</b></div>`).join('') +
       (kids.length || path ? '' : '<div class="slabel">لا مجلدات — سيُحفظ في جذر المشروع</div>') +
-      '<button class="btn" data-act="nf">+ مجلد</button><div class="srow"><button class="btn primary" data-act="go">حفظ هنا</button><button class="btn" data-act="dev">' + (FS_OK ? 'حفظ في…' : (typeof navigator.canShare === 'function' ? 'مشاركة' : 'تنزيل')) + '</button><button class="btn" data-ui="cancel">✕</button></div>', async (act, el) => {
+      '<button class="btn" data-act="nf">+ مجلد</button><div class="srow"><button class="btn primary" data-act="go">حفظ</button><button class="btn" data-ui="cancel">✕</button></div>', async (act, el) => {
         const inp = $('saName'); if (inp) nameVal = inp.value;
         if (act === 'dev') { ui.close(null); return saveToDevice(true); }
         if (act === 'up') { path = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''; return draw(); }
@@ -2406,7 +2405,9 @@ function exportDialog() {
       (list.length > 1 ? folderRows(list, sel).replace('/ (جذر المشروع)', 'المشروع كله') : '') +
       (canPick ? row('go', 'save', 'حفظ في…') : '') +
       (canShare ? row('share', 'external', 'مشاركة') : '') +
-      row('dl', 'arrow-down', 'تنزيل'), (act, el) => {
+      row('dl', 'arrow-down', 'تنزيل') +
+      row('one', 'file', 'هذا الملف فقط (بدون ZIP)'), (act, el) => {
+        if (act === 'one') { ui.close(null); return saveToDevice(true); }
         const inp = $('exName'); if (inp) nameVal = inp.value;
         if (act === 'fold') { const old = defName(); sel = list[+el.dataset.i]; if (nameVal === old) nameVal = defName(); return draw(); }
         if (act === 'go' || act === 'share' || act === 'dl') { const n = nameVal; ui.close(null); return exportZip(sel || null, null, n, act === 'share' ? 'share' : act === 'dl' ? 'download' : null); }
