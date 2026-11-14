@@ -1,6 +1,6 @@
 'use strict';
 /* الثوابت والحالة العامة */
-const PAD = 12, MARGIN = 12, MAX_HL = 400000;
+const PAD = 12, MARGIN = 30, MAX_HL = 400000;
 const LEGACY_KEYS = ['CodePatcher_v16', 'CodePatcher_v15_final'];
 const LS_KEY = 'CodePatcher_v17';
 
